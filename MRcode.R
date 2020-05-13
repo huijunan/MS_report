@@ -7,7 +7,7 @@ library(psycho)
 #### Read data 
 raw <- read.csv("data_bl_to_posttx.csv") # 270 patients at first
 outcome <- read.csv("rise_widescales_dec18.csv") %>%
-  select(ID, SF36V1_VITALITY_FUPTX, SF36V1_VITALITY_FU18mo) %>%
+  select(ID, SF36V1_VITALITY_FUPTX) %>%
   rename(id = ID) # select only outcome and identifier
 
 data <- raw %>%
@@ -71,8 +71,10 @@ data1 <- data %>%
          tnf2cat = ifelse(TNF_highalleles == 2, 1, 0),
          il6_2cat = ifelse(IL6_highalleles == 2, 1, 0),
          il1b_2cat = ifelse(IL6_highalleles == 0, 0, 1),
-         lump = ifelse(SURGTYPE_ENROLLMENT == 1, 1, 0),
-         mast = ifelse(SURGTYPE_ENROLLMENT == 2 | SURGTYPE_ENROLLMENT == 3 | SURGTYPE_ENROLLMENT == 4, 1, 0)) %>% 
+         lump = ifelse(SURGTYPE_ENROLLMENT == "1 Lumpectomy", 1, 0),
+         mast = ifelse(SURGTYPE_ENROLLMENT == "2 Mastectomy WITHOUT immediate reconstruction" | 
+                         SURGTYPE_ENROLLMENT == "3 Mastectomy WITH immediate reconstruction" | 
+                         SURGTYPE_ENROLLMENT == "4 Delayed reconstruction of previous mastectomy", 1, 0)) %>% 
   left_join(immune, by = "id") %>%
   left_join(immune_std, by = "id")
 
@@ -193,7 +195,7 @@ summary(SPS_max)
 #------------
 tabyl(data1$SURGTYPE_ENROLLMENT)
 tabyl(fat$SURGTYPE_ENROLLMENT)
-tabyl(nonfat$surg_post)
+tabyl(nonfat$SURGTYPE_ENROLLMENT)
 surg <- glm(formula = Outcome ~ lump + mast, family = "binomial", data = data1)
 summary(surg)
 anova(surg, mod1, test="LRT")
@@ -365,9 +367,7 @@ glm <- glm(formula = Outcome ~ AGE_BL + BMI_BL + Vital_BL + white  +
              edulow + edumed + employedYN + MARRIED2 + lump + mast + chemo + radia + charlson +
              ctq + SCID_PHMDD + 
              IES_BL + FCS_BL + PSS_BL + PSQI_BL + CESD_BL + SPS_max +
-             tnf2cat + il6_2cat + il1b_2cat +
-             LOG_IMMUNE_IFN_G + LOG_IMMUNE_IL_10 + LOG_IMMUNE_IL_6 + LOG_IMMUNE_IL_8 +
-             LOG_IMMUNE_TNF_A + LOG_IMMUNE_CRP + LOG_IMMUNE_sTNFR2, family = "binomial", data = data.glm)
+             tnf2cat + il6_2cat + il1b_2cat + LOG_IMMUNE_CRP, family = "binomial", data = data.glm)
 summary(glm)
 glm2 <- glm(formula = Outcome ~ AGE_BL + BMI_BL + Vital_BL + white  + 
              edulow + edumed + employedYN + MARRIED2 + lump + mast + chemo + radia + charlson +
